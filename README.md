@@ -49,9 +49,9 @@ const StudentName = ( studentId ) => {
 }
 ```
 
-[npm-image]: https://img.shields.io/npm/v/@vlsergey/react-bootstrap-csv-export.svg?style=flat-square
-[npm-url]: https://npmjs.org/package/@vlsergey/react-bootstrap-csv-export
-[ci-image]: https://github.com/vlsergey/react-bootstrap-csv-export/actions/workflows/node.js.yml/badge.svg?branch=master
-[ci-url]: https://github.com/vlsergey/react-bootstrap-csv-export/actions/workflows/node.js.yml
-[downloads-image]: http://img.shields.io/npm/dm/@vlsergey/react-bootstrap-csv-export.svg?style=flat-square
-[downloads-url]: https://npmjs.org/package/@vlsergey/react-bootstrap-csv-export
+[npm-image]: https://img.shields.io/npm/v/@vlsergey/react-cache-context.svg?style=flat-square
+[npm-url]: https://npmjs.org/package/@vlsergey/react-cache-context
+[ci-image]: https://github.com/vlsergey/react-cache-context/actions/workflows/node.js.yml/badge.svg?branch=master
+[ci-url]: https://github.com/vlsergey/react-cache-context/actions/workflows/node.js.yml
+[downloads-image]: http://img.shields.io/npm/dm/@vlsergey/react-cache-context.svg?style=flat-square
+[downloads-url]: https://npmjs.org/package/@vlsergey/react-cache-context
