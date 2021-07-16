@@ -1,0 +1,55 @@
+{
+  "name": "@vlsergey/react-cache-context",
+  "version": "0.0.1",
+  "description": "React Context for caching values by key, optionally with batched values supplier",
+  "main": "./lib/cjs/index.js",
+  "module": "./lib/esm/index.js",
+  "scripts": {
+    "clean": "rimraf lib/",
+    "build": "cross-env NODE_ENV=production tsc -p ./src/tsconfig-cjs.json && cross-env NODE_ENV=production tsc -p ./src/tsconfig-esm.json",
+    "build:watch": "cross-env NODE_ENV=development tsc -w --preserveWatchOutput -p ./src/tsconfig-cjs.json",
+    "eslint:check": "eslint --ignore-pattern \"!.eslintrc.js\" *.js src/**/*.ts src/**/*.tsx test/**/*.js test/**/*.tsx",
+    "eslint:fix": "eslint --ignore-pattern \"!.eslintrc.js\" --fix *.js src/**/*.ts* test/**/*.js test/**/*.ts*",
+    "eslint:watch": "esw --color --watch --ext .js --ext .jsx --ext .ts --ext .tsx --ignore-pattern \"!.eslintrc.js\" --fix *.js src/**/*.ts* test/**/*.ts*",
+    "test": "cross-env NODE_ENV=development karma start karma.conf.js --single-run",
+    "test:watch": "cross-env NODE_ENV=development karma start karma.conf.js --no-single-run",
+    "test:watch:chrome": "cross-env NODE_ENV=development karma start karma.conf.js --no-single-run --browsers Chrome",
+    "preversion": "npm run build && npm run eslint:fix && npm test && npm run clean && npm run build",
+    "version": "npm publish --access=public",
+    "postversion": "git push && git push --tags"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vlsergey/react-bootstrap-csv-export.git"
+  },
+  "keywords": [
+    "react",
+    "cache",
+    "context",
+    "provider",
+    "batch",
+    "queue",
+    "vlsergey"
+  ],
+  "author": "Sergey Vladimirov <vlsergey@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/vlsergey/react-cache-context/issues"
+  },
+  "homepage": "https://github.com/vlsergey/react-cache-context#readme",
+  "dependencies": {
+    "@typescript-eslint/visitor-keys": "^4.28.3",
+    "tslib": "^2.2.0"
+  },
+  "devDependencies": {
+    "@vlsergey/js-config": "^6.0.0",
+    "eslint-watch": "^7.0.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  },
+  "peerDependencies": {
+    "prop-types": ">=15.7",
+    "react": ">16.8",
+    "react-dom": ">16.8"
+  }
+}
