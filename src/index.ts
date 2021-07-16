@@ -1,3 +1,7 @@
-import createCacheContext from "./createCacheContext";
+import CachesStore from './CachesStore';
+import RegisterCache from './RegisterCache';
+import useCacheValue from './useCacheValue';
 
-export {createCacheContext};
+export {CachesStore};
+export {RegisterCache};
+export {useCacheValue};

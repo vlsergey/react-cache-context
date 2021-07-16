@@ -4,7 +4,7 @@ module.exports = function( config ) {
   imported(config);
   config.set( {
     files: [
-      'test/**/*Test.ts',
+      'test/**/*Test.ts*',
     ],
   } );
 };

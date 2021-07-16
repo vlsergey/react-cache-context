@@ -17,6 +17,38 @@ or
 npm install --save-dev @vlsergey/react-cache-context
 ```
 
+## Usage
+
+```jsx
+// in application root
+import {CachesStore, RegisterCache} from "@vlsergey/react-cache-context";
+
+/* ... */
+// include CachesStore inside any authorization providers/wrappers if any present,
+// but outside of routing providers
+return <CachesStore>
+  <RegisterCache
+    cacheId="groupsCache"
+    getter={ async ( groupId ) => (await new Api().groups.findById( groupId )).data }>
+    <RegisterCache
+      cacheId="studentsCache"
+      getter={ async ( studentId ) => (await new Api().students.findById( studentId )).data }>
+        { /* ... */ }
+    </RegisterCache>
+  </RegisterCache>
+</CachesStore>
+```
+
+```jsx
+// in some (function) component
+import {useCacheValue} from "@vlsergey/react-cache-context";
+
+const StudentName = ( studentId ) => {
+  const student = useCacheValue( 'studentsCache', studentId );
+  return (student || {}).name || null;
+}
+```
+
 [npm-image]: https://img.shields.io/npm/v/@vlsergey/react-bootstrap-csv-export.svg?style=flat-square
 [npm-url]: https://npmjs.org/package/@vlsergey/react-bootstrap-csv-export
 [ci-image]: https://github.com/vlsergey/react-bootstrap-csv-export/actions/workflows/node.js.yml/badge.svg?branch=master
