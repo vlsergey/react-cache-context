@@ -19,7 +19,7 @@ describe('react-cache-context', () => {
     </div>) as unknown as HTMLDivElement;
 
     await sleep(0);
-    assert.equal(result.innerText, JSON.stringify('Hello, World!'));
+    assert.equal(result.textContent, JSON.stringify('Hello, World!'));
   });
 
   it('Able to render cache with delayed getter return', async () => {
@@ -38,12 +38,12 @@ describe('react-cache-context', () => {
 
     // not yet resolved
     await sleep(0);
-    assert.equal(result.innerText, 'null');
+    assert.equal(result.textContent, 'null');
 
     // resolved
     myResolve('Hello, World!');
     await sleep(0);
-    assert.equal(result.innerText, '"Hello, World!"');
+    assert.equal(result.textContent, '"Hello, World!"');
   });
 });
 
