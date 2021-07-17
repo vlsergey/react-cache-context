@@ -1,4 +1,4 @@
-import React, {ReactNode, useCallback, useContext, useMemo, useState}
+import React, {PureComponent, ReactNode}
   from 'react';
 
 import AllCachesContext from './AllCachesContext';
@@ -20,72 +20,74 @@ interface PropsType<K extends Key, V> {
   missingValue?: V;
 }
 
-function withoutKey<K extends Key, V> (src: Record<K, V>, key: K): Record<K, V> {
-  if (!Object.prototype.hasOwnProperty.call(src, key)) {
-    return src;
-  }
+export default class RegisterCache<K extends Key, V>
+  extends PureComponent<PropsType<K, V>> {
 
-  const result = {...src};
-  delete result[key];
-  return result;
-}
+  static override contextType = AllCachesContext;
+  override context: React.ContextType<typeof AllCachesContext>;
 
-function RegisterCache<K extends Key, V> ({
-  cacheId,
-  children,
-  getter,
-  missingValue,
-}: PropsType<K, V>): JSX.Element {
-  const allCachesContext = useContext(AllCachesContext);
-  const cacheContextHolder = allCachesContext.getOrRegister(cacheId, missingValue);
+  private readonly loading = new Set<K>();
+  private readonly errors = new Map<K, unknown>();
+  private readonly values = new Map<K, V>();
+  private renderQueued = true;
 
-  // will be used without setState()
-  // also it will allow to call get() without wrapping in useEffect()
-  const [loading] = useState({} as Record<K, boolean>);
-  const [errors, setErrors] = useState({} as Record<K, unknown>);
-  const [values, setValues] = useState({} as Record<K, V>);
-
-  const handleGet = useCallback((key: K) => {
-    const error = errors[key];
+  private readonly handleGet = (key: K) => {
+    const error: unknown = this.errors.get(key);
     if (error !== undefined) {
       throw error;
     }
 
-    const value = values[key];
+    const value = this.values.get(key);
     if (value !== null && value !== undefined) {
       return unwrap(value);
     }
 
-    if (!loading[key]) {
-      loading[key] = true;
+    if (!this.loading.has(key)) {
+      this.loading.add(key);
       void (async () => {
         try {
-          const resultValue = await getter(key);
-          setValues(v => ({...v, [key]: resultValue}));
-          setErrors(e => withoutKey(e, key));
+          const resultValue = await this.props.getter(key);
+          this.values.set(key, resultValue);
+          this.errors.delete(key);
         } catch (err: unknown) {
-          setErrors(e => ({...e, [key]: err}));
-          setValues(v => withoutKey(v, key));
+          this.errors.set(key, err);
+          this.values.delete(key);
         } finally {
-          delete loading[key];
+          this.loading.delete(key);
+
+          // update context and force component rerender
+          if (!this.renderQueued) {
+            this.contextValue = {
+              ...this.contextValue,
+              updateCounter: this.contextValue.updateCounter + 1,
+            };
+            this.forceUpdate();
+            this.renderQueued = true;
+          }
         }
       })();
     }
 
-    return missingValue;
-  }, [getter, missingValue, errors, setErrors, loading, values, setValues]);
+    return this.props.missingValue;
+  };
 
-  const contextValue = useMemo(() => ({
-    get: handleGet
-  }), [handleGet]);
+  private contextValue = {
+    get: this.handleGet,
+    updateCounter: 0,
+  };
 
-  if (!cacheContextHolder) {
-    return children as unknown as JSX.Element;
+  override render (): JSX.Element {
+    this.renderQueued = false;
+
+    const {cacheId, missingValue, children} = this.props;
+    const cacheContextHolder = this.context.getOrRegister(cacheId, missingValue);
+
+    if (!cacheContextHolder) {
+      return children as unknown as JSX.Element;
+    }
+
+    return React.createElement(cacheContextHolder.context.Provider, {
+      value: this.contextValue
+    }, children);
   }
-
-  return React.createElement(cacheContextHolder.context.Provider, {
-    value: contextValue
-  }, children);
 }
-
-export default React.memo(RegisterCache);
