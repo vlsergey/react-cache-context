@@ -1,7 +1,6 @@
-import React, {ReactNode, useCallback, useMemo, useState} from 'react';
+import React, {PureComponent, ReactNode} from 'react';
 
 import AllCachesContext from './AllCachesContext';
-import AllCachesContextType from './AllCachesContextType';
 import CacheContext from './CacheContext';
 import CacheReactContextHolder from './CacheReactContextHolder';
 import Key from './Key';
@@ -10,20 +9,22 @@ interface PropsType {
   children: ReactNode;
 }
 
-const CachesStore = ({children}: PropsType) => {
-  /* Yes, it's not good, but we are using mutable variable in state.
-  Thus getOrRegister() can be called directly without wrapping into useEffect() */
-  const [caches] = useState({} as Record<string, CacheReactContextHolder<Key, unknown>>);
+// we are using class component instead of functional
+// because we need class fields and don't want to incorrectly use useState() hook
 
-  const handleGet = useCallback(<K extends Key, V>(cacheId: string): CacheReactContextHolder<K, V> =>
-    caches[cacheId] as CacheReactContextHolder<K, V>, [caches]);
+export default class CachesStore extends PureComponent<PropsType> {
 
-  const handleGetOrRegister = useCallback(<K extends Key, V>(
+  private readonly caches = {} as Record<string, CacheReactContextHolder<Key, unknown>>;
+
+  private readonly handleGet = <K extends Key, V>(cacheId: string): CacheReactContextHolder<K, V> =>
+    this.caches[cacheId] as CacheReactContextHolder<K, V>;
+
+  private readonly handleGetOrRegister = <K extends Key, V>(
     cacheId: string,
     missingValue: V
   ): CacheReactContextHolder<K, V> => {
-    if (caches[cacheId]) {
-      return caches[cacheId] as CacheReactContextHolder<K, V>;
+    if (this.caches[cacheId]) {
+      return this.caches[cacheId] as CacheReactContextHolder<K, V>;
     }
 
     const newCacheContext = React.createContext({
@@ -35,18 +36,18 @@ const CachesStore = ({children}: PropsType) => {
       context: newCacheContext,
       missingValue,
     };
-    caches[cacheId] = newCache;
+    this.caches[cacheId] = newCache;
     return newCache;
-  }, [caches]);
+  };
 
-  const contextValue = useMemo<AllCachesContextType>(() => ({
-    get: handleGet,
-    getOrRegister: handleGetOrRegister,
-  }), [handleGet, handleGetOrRegister]);
+  private readonly contextValue = {
+    get: this.handleGet,
+    getOrRegister: this.handleGetOrRegister,
+  };
 
-  return <AllCachesContext.Provider value={contextValue}>
-    {children}
-  </AllCachesContext.Provider>;
-};
-
-export default React.memo(CachesStore);
+  override render (): JSX.Element {
+    return <AllCachesContext.Provider value={this.contextValue}>
+      {this.props.children}
+    </AllCachesContext.Provider>;
+  }
+}
