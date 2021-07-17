@@ -49,6 +49,19 @@ const StudentName = ( studentId ) => {
 }
 ```
 
+## Use as LRU (last recently used) or TTL cache
+With `mapSupplier` property of `RegisterCache` component one can use LRU or TTL map implementations as internal cache store. Note, that internally two maps are used for each cache: map of values (`CacheMap<K, V>`) and maps of errors (`CacheMap<K, unknown>`).
+
+Provided map must conform to following interface (partial interface of JavaScript `Map`):
+```TypeScript
+interface CacheMap<K extends Key, V> {
+  delete: (key: K) => unknown;
+  has: (key: K) => boolean;
+  get: (key: K) => V;
+  set: (key: K, value: V) => unknown;
+}
+```
+
 [npm-image]: https://img.shields.io/npm/v/@vlsergey/react-cache-context.svg?style=flat-square
 [npm-url]: https://npmjs.org/package/@vlsergey/react-cache-context
 [ci-image]: https://github.com/vlsergey/react-cache-context/actions/workflows/node.js.yml/badge.svg?branch=master

@@ -2,6 +2,7 @@ import React, {PureComponent, ReactNode}
   from 'react';
 
 import AllCachesContext from './AllCachesContext';
+import CacheMap from './CacheMap';
 import Key from './Key';
 
 const NULL_WRAP = new Object();
@@ -17,19 +18,33 @@ interface PropsType<K extends Key, V> {
   cacheId: string;
   getter: (key: K) => Promise<V>;
   children: ReactNode;
+  mapSupplier: <T>(cacheId: string) => CacheMap<K, T>;
   missingValue?: V;
 }
 
 export default class RegisterCache<K extends Key, V>
   extends PureComponent<PropsType<K, V>> {
 
+  public static defaultMapSupplier = <K, V>(): Map<K, V> => new Map<K, V>();
+
+  static defaultProps = {
+    mapSupplier: RegisterCache.defaultMapSupplier,
+  };
+
   static override contextType = AllCachesContext;
   override context: React.ContextType<typeof AllCachesContext>;
 
   private readonly loading = new Set<K>();
-  private readonly errors = new Map<K, unknown>();
-  private readonly values = new Map<K, V>();
+  private readonly errors: CacheMap<K, unknown>;
+  private readonly values: CacheMap<K, V>;
   private renderQueued = true;
+
+  constructor (props: PropsType<K, V>) {
+    super(props);
+
+    this.values = props.mapSupplier<V>(props.cacheId);
+    this.errors = props.mapSupplier<unknown>(props.cacheId);
+  }
 
   private readonly handleGet = (key: K) => {
     const error: unknown = this.errors.get(key);
