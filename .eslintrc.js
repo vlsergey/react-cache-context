@@ -7,8 +7,8 @@ module.exports = {
       './test/tsconfig.json',
     ],
   },
-  extends: [ './node_modules/@vlsergey/js-config/src/eslint' ],
+  extends: ['./node_modules/@vlsergey/js-config/src/eslint'],
   rules: {
-    '@typescript-eslint/no-unused-vars': [ 'error', {varsIgnorePattern: 'jsx'} ],
+    '@typescript-eslint/no-unused-vars': ['error', {varsIgnorePattern: 'jsx'}],
   },
 };

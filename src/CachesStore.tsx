@@ -13,17 +13,17 @@ interface PropsType {
 const CachesStore = ({children}: PropsType) => {
   /* Yes, it's not good, but we are using mutable variable in state.
   Thus getOrRegister() can be called directly without wrapping into useEffect() */
-  const [ caches ] = useState({} as Record<string, CacheReactContextHolder<Key, unknown>>);
+  const [caches] = useState({} as Record<string, CacheReactContextHolder<Key, unknown>>);
 
   const handleGet = useCallback(<K extends Key, V>(cacheId: string): CacheReactContextHolder<K, V> =>
-    caches[ cacheId ] as CacheReactContextHolder<K, V>, [ caches ]);
+    caches[cacheId] as CacheReactContextHolder<K, V>, [caches]);
 
   const handleGetOrRegister = useCallback(<K extends Key, V>(
     cacheId: string,
     missingValue: V
   ): CacheReactContextHolder<K, V> => {
-    if (caches[ cacheId ]) {
-      return caches[ cacheId ] as CacheReactContextHolder<K, V>;
+    if (caches[cacheId]) {
+      return caches[cacheId] as CacheReactContextHolder<K, V>;
     }
 
     const newCacheContext = React.createContext({
@@ -35,14 +35,14 @@ const CachesStore = ({children}: PropsType) => {
       context: newCacheContext,
       missingValue,
     };
-    caches[ cacheId ] = newCache;
+    caches[cacheId] = newCache;
     return newCache;
-  }, [ caches ]);
+  }, [caches]);
 
   const contextValue = useMemo<AllCachesContextType>(() => ({
     get: handleGet,
     getOrRegister: handleGetOrRegister,
-  }), [ handleGet, handleGetOrRegister ]);
+  }), [handleGet, handleGetOrRegister]);
 
   return <AllCachesContext.Provider value={contextValue}>
     {children}

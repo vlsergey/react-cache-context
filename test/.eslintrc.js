@@ -14,6 +14,8 @@ module.exports = {
   plugins: [ 'promise' ],
 
   rules: {
+    // due to renderIntoDocument() usage
+    '@typescript-eslint/no-confusing-void-expression': 0,
     /* JSX props should not use arrow functions */
     'react/jsx-no-bind': 0,
   },

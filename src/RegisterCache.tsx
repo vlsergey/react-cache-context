@@ -26,7 +26,7 @@ function withoutKey<K extends Key, V> (src: Record<K, V>, key: K): Record<K, V> 
   }
 
   const result = {...src};
-  delete result[ key ];
+  delete result[key];
   return result;
 }
 
@@ -41,43 +41,43 @@ function RegisterCache<K extends Key, V> ({
 
   // will be used without setState()
   // also it will allow to call get() without wrapping in useEffect()
-  const [ loading ] = useState({} as Record<K, boolean>);
-  const [ errors, setErrors ] = useState({} as Record<K, unknown>);
-  const [ values, setValues ] = useState({} as Record<K, V>);
+  const [loading] = useState({} as Record<K, boolean>);
+  const [errors, setErrors] = useState({} as Record<K, unknown>);
+  const [values, setValues] = useState({} as Record<K, V>);
 
   const handleGet = useCallback((key: K) => {
-    const error = errors[ key ];
+    const error = errors[key];
     if (error !== undefined) {
       throw error;
     }
 
-    const value = values[ key ];
+    const value = values[key];
     if (value !== null && value !== undefined) {
       return unwrap(value);
     }
 
-    if (!loading[ key ]) {
-      loading[ key ] = true;
+    if (!loading[key]) {
+      loading[key] = true;
       void (async () => {
         try {
           const resultValue = await getter(key);
-          setValues(v => ({...v, [ key ]: resultValue}));
+          setValues(v => ({...v, [key]: resultValue}));
           setErrors(e => withoutKey(e, key));
         } catch (err: unknown) {
-          setErrors(e => ({...e, [ key ]: err}));
+          setErrors(e => ({...e, [key]: err}));
           setValues(v => withoutKey(v, key));
         } finally {
-          delete loading[ key ];
+          delete loading[key];
         }
       })();
     }
 
     return missingValue;
-  }, [ getter, missingValue, errors, setErrors, loading, values, setValues ]);
+  }, [getter, missingValue, errors, setErrors, loading, values, setValues]);
 
   const contextValue = useMemo(() => ({
     get: handleGet
-  }), [ handleGet ]);
+  }), [handleGet]);
 
   if (!cacheContextHolder) {
     return children as unknown as JSX.Element;
