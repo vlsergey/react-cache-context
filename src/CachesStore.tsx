@@ -3,9 +3,12 @@ import React, {PureComponent, ReactNode} from 'react';
 import AllCachesContext from './AllCachesContext';
 import CacheContext from './CacheContext';
 import CacheReactContextHolder from './CacheReactContextHolder';
+import CacheSpec from './CacheSpec';
 import Key from './Key';
+import RegisterCache from './RegisterCache';
 
 interface PropsType {
+  caches?: Record<string, CacheSpec<Key, unknown>>;
   children: ReactNode;
 }
 
@@ -51,9 +54,26 @@ export default class CachesStore extends PureComponent<PropsType> {
     getOrRegister: this.handleGetOrRegister,
   };
 
+  // we expect this method to be called once... well, unless children are not changed
   override render (): JSX.Element {
+    const {caches, children} = this.props;
+
+    let innerResult: ReactNode = children;
+    if (caches) {
+      Object.entries(caches).forEach(([cacheId, cacheSpec]) => {
+        if (typeof cacheSpec === 'function') {
+          innerResult = React.createElement(RegisterCache, {
+            cacheId,
+            getter: cacheSpec as ((key: unknown) => Promise<unknown>)
+          }, innerResult);
+        } else {
+          innerResult = React.createElement(RegisterCache, {cacheId, ...cacheSpec}, innerResult);
+        }
+      });
+    }
+
     return <AllCachesContext.Provider value={this.contextValue}>
-      {this.props.children}
+      {innerResult}
     </AllCachesContext.Provider>;
   }
 }

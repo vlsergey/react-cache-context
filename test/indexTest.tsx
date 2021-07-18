@@ -7,7 +7,33 @@ import {CachesStore, RegisterCache, useCacheValue} from '../src';
 const sleep = async (ms: number): Promise< unknown > => new Promise(resolve => setTimeout(resolve, ms));
 
 describe('react-cache-context', () => {
-  it('Able to render cache with instant getter return', async () => {
+  it('Able to render cache with instant getter return with CachesStore simple specs', async () => {
+    const getter = (key: string) => Promise.resolve(`Hello, ${key}!`);
+
+    const result = renderIntoDocument(<div>
+      <CachesStore caches={{testCache: getter}}>
+        <CacheValueJson cacheId="testCache" cacheKey="World" />
+      </CachesStore>
+    </div>) as unknown as HTMLDivElement;
+
+    await sleep(0);
+    assert.equal(result.textContent, JSON.stringify('Hello, World!'));
+  });
+
+  it('Able to render cache with instant getter return with CachesStore extended specs', async () => {
+    const getter = (key: string) => Promise.resolve(`Hello, ${key}!`);
+
+    const result = renderIntoDocument(<div>
+      <CachesStore caches={{testCache: {getter}}}>
+        <CacheValueJson cacheId="testCache" cacheKey="World" />
+      </CachesStore>
+    </div>) as unknown as HTMLDivElement;
+
+    await sleep(0);
+    assert.equal(result.textContent, JSON.stringify('Hello, World!'));
+  });
+
+  it('Able to render cache with instant getter return with RegisterCache', async () => {
     const getter = (key: string) => Promise.resolve(`Hello, ${key}!`);
 
     const result = renderIntoDocument(<div>

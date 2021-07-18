@@ -17,8 +17,8 @@ function unwrap<V> (value: V): V {
 interface PropsType<K extends Key, V> {
   cacheId: string;
   getter: (key: K) => Promise<V>;
-  children: ReactNode;
-  mapSupplier: <T>(cacheId: string) => CacheMap<K, T>;
+  children?: ReactNode;
+  mapSupplier?: <T>(cacheId: string) => CacheMap<K, T>;
   missingValue?: V;
 }
 
