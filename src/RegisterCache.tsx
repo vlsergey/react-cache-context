@@ -46,12 +46,25 @@ export default class RegisterCache<K extends Key, V>
     this.errors = props.mapSupplier<unknown>(props.cacheId);
   }
 
-  private readonly handleGet = (key: K) => {
-    const error: unknown = this.errors.get(key);
-    if (error !== undefined) {
-      throw error;
+  /** update context and force component rerender to consume new context */
+  private readonly queueRender = () => {
+    if (!this.renderQueued) {
+      this.contextValue = {
+        ...this.contextValue,
+        updateCounter: this.contextValue.updateCounter + 1,
+      };
+      this.forceUpdate();
+      this.renderQueued = true;
     }
+  };
 
+  private readonly handleDelete = (key: K) => {
+    this.values.delete(key);
+    this.errors.delete(key);
+    this.queueRender();
+  };
+
+  private readonly handleGet = (key: K) => {
     const value = this.values.get(key);
     if (value !== null && value !== undefined) {
       return unwrap(value);
@@ -69,24 +82,21 @@ export default class RegisterCache<K extends Key, V>
           this.values.delete(key);
         } finally {
           this.loading.delete(key);
-
-          // update context and force component rerender
-          if (!this.renderQueued) {
-            this.contextValue = {
-              ...this.contextValue,
-              updateCounter: this.contextValue.updateCounter + 1,
-            };
-            this.forceUpdate();
-            this.renderQueued = true;
-          }
+          this.queueRender();
         }
       })();
+    }
+
+    const error: unknown = this.errors.get(key);
+    if (error !== undefined) {
+      throw error;
     }
 
     return this.props.missingValue;
   };
 
   private contextValue = {
+    delete: this.handleDelete,
     get: this.handleGet,
     updateCounter: 0,
   };

@@ -9,6 +9,16 @@ interface PropsType {
   children: ReactNode;
 }
 
+function defaultCacheContext<K extends Key, V> (cacheId: string): CacheContext<K, V> {
+  const errorThrower = (): unknown => {
+    throw new Error(`Trying to access cache ${cacheId} outside of RegisterCache element (no cache context provided)`);
+  };
+  return {
+    delete: errorThrower as ((key: K) => unknown),
+    get: errorThrower as ((key: K) => V),
+  };
+}
+
 // we are using class component instead of functional
 // because we need class fields and don't want to incorrectly use useState() hook
 
@@ -27,11 +37,7 @@ export default class CachesStore extends PureComponent<PropsType> {
       return this.caches[cacheId] as CacheReactContextHolder<K, V>;
     }
 
-    const newCacheContext = React.createContext({
-      get: () => {
-        throw new Error(`Trying to access cache ${cacheId} outside of RegisterCache element (no cache context provided)`);
-      }
-    } as CacheContext<K, V>);
+    const newCacheContext = React.createContext(defaultCacheContext<K, V>(cacheId));
     const newCache: CacheReactContextHolder<K, V> = {
       context: newCacheContext,
       missingValue,

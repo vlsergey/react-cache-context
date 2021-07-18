@@ -3,10 +3,12 @@
 [![CI Status][ci-image]][ci-url]
 [![Downloads][downloads-image]][downloads-url]
 
-React Context for caching values by key, optionally with batched values supplier.
+React Context for caching values by key.
 
 Main features:
-* [x] Key-value cache with simple `useFromCache()` and `useFromCacheOrQueue()` hook interfaces
+* [x] Key-value cache with simple `useCacheValue()` hook
+* [x] Supports multiple caches, each uses it's own React context. Updating single cache will _not_ result in whole-application rerender.
+* [x] Can be integrated with LRU / TTL map implementations with `mapSupplier` property.
 
 ## Installation:
 ```
@@ -45,9 +47,29 @@ import {useCacheValue} from "@vlsergey/react-cache-context";
 
 const StudentName = ( studentId ) => {
   const student = useCacheValue( 'studentsCache', studentId );
-  return (student || {}).name || null;
+  return (student || {}).name || studentId;
 }
 ```
+
+## API
+
+### `useCache( cacheId: string ) : CacheContext<K, V>`
+Provide access to cache context with specified `cacheId`. Hook should be called inside component inside corresponding `<RegisterCache>` element (otherwise all calls to it's methods will result in error).
+
+`CacheContext<K, V>` provides man methods to get or invalidate information from single cache:
+```TypeScript
+interface CacheContext<K extends Key, V> {
+  get: (key: K) => V;
+  delete: (key: K) => unknown;
+}
+```
+
+### `useCacheValue<K, V>( cacheId: string, key: K ) : V`
+Returns currently stored value from cache or throws error if last call of `getter` with provided key resulted an error. If no value present (and loading is not in progress yet) will generate async call to `getter` to obtain value.
+
+If no value and no error present in cache immediately returns `missingValue` property of `<RegisterCache>`, or `undefined` if such property were not set.
+
+Current implementation will retry to obtain value if last `getter` returns an error.
 
 ## Use as LRU (last recently used) or TTL cache
 With `mapSupplier` property of `RegisterCache` component one can use LRU or TTL map implementations as internal cache store. Note, that internally two maps are used for each cache: map of values (`CacheMap<K, V>`) and maps of errors (`CacheMap<K, unknown>`).
