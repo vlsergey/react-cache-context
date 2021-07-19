@@ -8,6 +8,12 @@ import Key from './Key';
 const NULL_WRAP = new Object();
 const UNDEFINED_WRAP = new Object();
 
+function wrap<V> (value: V): V {
+  if (value === null) return NULL_WRAP;
+  if (value === undefined) return UNDEFINED_WRAP;
+  return value;
+}
+
 function unwrap<V> (value: V): V {
   if (value === NULL_WRAP) return null;
   if (value === UNDEFINED_WRAP) return undefined;
@@ -74,7 +80,7 @@ export default class RegisterCache<K extends Key, V>
       this.loading.add(key);
       void (async () => {
         try {
-          const resultValue = await this.props.getter(key);
+          const resultValue = wrap(await this.props.getter(key));
           this.values.set(key, resultValue);
           this.errors.delete(key);
         } catch (err: unknown) {
