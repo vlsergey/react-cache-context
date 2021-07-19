@@ -2,6 +2,7 @@ import React, {PureComponent, ReactNode}
   from 'react';
 
 import AllCachesContext from './AllCachesContext';
+import CacheContext from './CacheContext';
 import CacheMap from './CacheMap';
 import Key from './Key';
 
@@ -9,8 +10,8 @@ const NULL_WRAP = new Object();
 const UNDEFINED_WRAP = new Object();
 
 function wrap<V> (value: V): V {
-  if (value === null) return NULL_WRAP;
-  if (value === undefined) return UNDEFINED_WRAP;
+  if (value === null) return NULL_WRAP as V;
+  if (value === undefined) return UNDEFINED_WRAP as V;
   return value;
 }
 
@@ -28,8 +29,12 @@ interface PropsType<K extends Key, V> {
   missingValue?: V;
 }
 
+interface StateType {
+  updateCounter: number;
+}
+
 export default class RegisterCache<K extends Key, V>
-  extends PureComponent<PropsType<K, V>> {
+  extends PureComponent<PropsType<K, V>, StateType> {
 
   public static defaultMapSupplier = <K, V>(): Map<K, V> => new Map<K, V>();
 
@@ -40,10 +45,13 @@ export default class RegisterCache<K extends Key, V>
   static override contextType = AllCachesContext;
   override context: React.ContextType<typeof AllCachesContext>;
 
+  override state = {
+    updateCounter: 0,
+  };
+
   private readonly loading = new Set<K>();
   private readonly errors: CacheMap<K, unknown>;
   private readonly values: CacheMap<K, V>;
-  private renderQueued = true;
 
   constructor (props: PropsType<K, V>) {
     super(props);
@@ -52,16 +60,9 @@ export default class RegisterCache<K extends Key, V>
     this.errors = props.mapSupplier<unknown>(props.cacheId);
   }
 
-  /** update context and force component rerender to consume new context */
+  /** update state and thus force component rerender to provide new context to children */
   private readonly queueRender = () => {
-    if (!this.renderQueued) {
-      this.contextValue = {
-        ...this.contextValue,
-        updateCounter: this.contextValue.updateCounter + 1,
-      };
-      this.forceUpdate();
-      this.renderQueued = true;
-    }
+    this.setState(({updateCounter}) => ({updateCounter: updateCounter + 1}));
   };
 
   private readonly handleDelete = (key: K) => {
@@ -101,15 +102,7 @@ export default class RegisterCache<K extends Key, V>
     return this.props.missingValue;
   };
 
-  private contextValue = {
-    delete: this.handleDelete,
-    get: this.handleGet,
-    updateCounter: 0,
-  };
-
   override render (): JSX.Element {
-    this.renderQueued = false;
-
     const {cacheId, missingValue, children} = this.props;
     const cacheContextHolder = this.context.getOrRegister(cacheId, missingValue);
 
@@ -118,7 +111,11 @@ export default class RegisterCache<K extends Key, V>
     }
 
     return React.createElement(cacheContextHolder.context.Provider, {
-      value: this.contextValue
+      value: {
+        delete: this.handleDelete,
+        get: this.handleGet,
+        updateCounter: this.state.updateCounter,
+      } as CacheContext<K, V>
     }, children);
   }
 }
