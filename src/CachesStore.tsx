@@ -17,6 +17,7 @@ function defaultCacheContext<K extends Key, V> (cacheId: string): CacheContext<K
     throw new Error(`Trying to access cache ${cacheId} outside of RegisterCache element (no cache context provided)`);
   };
   return {
+    clear: errorThrower as (() => unknown),
     delete: errorThrower as ((key: K) => unknown),
     get: errorThrower as ((key: K) => V),
   };

@@ -65,6 +65,12 @@ export default class RegisterCache<K extends Key, V>
     this.setState(({updateCounter}) => ({updateCounter: updateCounter + 1}));
   };
 
+  private readonly handleClear = () => {
+    this.values.clear();
+    this.errors.clear();
+    this.queueRender();
+  };
+
   private readonly handleDelete = (key: K) => {
     this.values.delete(key);
     this.errors.delete(key);
@@ -112,6 +118,7 @@ export default class RegisterCache<K extends Key, V>
 
     return React.createElement(cacheContextHolder.context.Provider, {
       value: {
+        clear: this.handleClear,
         delete: this.handleDelete,
         get: this.handleGet,
         updateCounter: this.state.updateCounter,

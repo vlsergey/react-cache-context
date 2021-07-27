@@ -85,6 +85,7 @@ Provide access to cache context with specified `cacheId`. Hook should be called 
 ```TypeScript
 interface CacheContext<K extends Key, V> {
   get: (key: K) => V;
+  clear: () => unknown;
   delete: (key: K) => unknown;
 }
 ```
@@ -102,6 +103,7 @@ With `mapSupplier` property of `RegisterCache` component one can use LRU or TTL 
 Provided map must conform to following interface (partial interface of JavaScript `Map`):
 ```TypeScript
 interface CacheMap<K extends Key, V> {
+  clear: () => unknown;
   delete: (key: K) => unknown;
   has: (key: K) => boolean;
   get: (key: K) => V;
