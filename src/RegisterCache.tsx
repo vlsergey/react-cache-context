@@ -1,5 +1,4 @@
-import React, {PureComponent, ReactNode}
-  from 'react';
+import React, {PureComponent, ReactNode} from 'react';
 
 import AllCachesContext from './AllCachesContext';
 import CacheContext from './CacheContext';
@@ -49,7 +48,7 @@ export default class RegisterCache<K extends Key, V>
     updateCounter: 0,
   };
 
-  private readonly loading = new Set<K>();
+  private readonly loading = new Map<K, Promise<V>>();
   private readonly errors: CacheMap<K, unknown>;
   private readonly values: CacheMap<K, V>;
 
@@ -84,20 +83,7 @@ export default class RegisterCache<K extends Key, V>
     }
 
     if (!this.loading.has(key)) {
-      this.loading.add(key);
-      void (async () => {
-        try {
-          const resultValue = wrap(await this.props.getter(key));
-          this.values.set(key, resultValue);
-          this.errors.delete(key);
-        } catch (err: unknown) {
-          this.errors.set(key, err);
-          this.values.delete(key);
-        } finally {
-          this.loading.delete(key);
-          this.queueRender();
-        }
-      })();
+      void this.queueLoad(key);
     }
 
     const error: unknown = this.errors.get(key);
@@ -106,6 +92,42 @@ export default class RegisterCache<K extends Key, V>
     }
 
     return this.props.missingValue;
+  };
+
+  private readonly handleGetPromise = (key: K) => {
+    const value = this.values.get(key);
+    if (value !== null && value !== undefined) {
+      return Promise.resolve(unwrap(value));
+    }
+    if (this.loading.has(key)) {
+      return this.loading.get(key);
+    }
+    return this.queueLoad(key);
+  };
+
+  private readonly queueLoad = (key: K): Promise<V> => {
+    const getPromise: Promise<V> = this.props.getter(key);
+    this.loading.set(key, getPromise);
+
+    const doFinally = () => {
+      this.loading.delete(key);
+      this.queueRender();
+    };
+
+    void getPromise.then((value: V) => {
+      const wrappedValue = wrap(value);
+      this.values.set(key, wrappedValue);
+      this.errors.delete(key);
+      doFinally();
+    });
+
+    getPromise.catch((err: unknown) => {
+      this.errors.set(key, err);
+      this.values.delete(key);
+      doFinally();
+    });
+
+    return getPromise;
   };
 
   override render (): JSX.Element {
@@ -121,6 +143,7 @@ export default class RegisterCache<K extends Key, V>
         clear: this.handleClear,
         delete: this.handleDelete,
         get: this.handleGet,
+        getPromise: this.handleGetPromise,
         updateCounter: this.state.updateCounter,
       } as CacheContext<K, V>
     }, children);

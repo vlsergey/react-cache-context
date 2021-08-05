@@ -1,9 +1,10 @@
 import Key from './Key';
 
 interface CacheContext<K extends Key, V> {
-  get: (key: K) => V;
-  delete: (key: K) => unknown;
   clear: () => unknown;
+  delete: (key: K) => unknown;
+  get: (key: K) => V;
+  getPromise: (key: K) => Promise<V>;
 }
 
 export default CacheContext;

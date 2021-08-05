@@ -84,9 +84,10 @@ Provide access to cache context with specified `cacheId`. Hook should be called 
 `CacheContext<K, V>` provides man methods to get or invalidate information from single cache:
 ```TypeScript
 interface CacheContext<K extends Key, V> {
-  get: (key: K) => V;
   clear: () => unknown;
   delete: (key: K) => unknown;
+  get: (key: K) => V;
+  getPromise: (key: K) => Promise<V>;
 }
 ```
 
@@ -96,6 +97,9 @@ Returns currently stored value from cache or throws error if last call of `gette
 If no value and no error present in cache immediately returns `missingValue` property of `<RegisterCache>`, or `undefined` if such property were not set.
 
 Current implementation will retry to obtain value if last `getter` returns an error.
+
+### `useCachePromise<K, V>( cacheId: string, key: K ) : V`
+Returns currently stored value from cache (as `Promise.resolve(…)`). If no value present new promise is obtained from `getter` and returned as result. This method ignores stored errors (i.e. always repeat failed queries), but only one query is executed at the same time for any particular key.
 
 ## Use as LRU (last recently used) or TTL cache
 With `mapSupplier` property of `RegisterCache` component one can use LRU or TTL map implementations as internal cache store. Note, that internally two maps are used for each cache: map of values (`CacheMap<K, V>`) and maps of errors (`CacheMap<K, unknown>`).
