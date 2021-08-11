@@ -38,7 +38,6 @@
   },
   "homepage": "https://github.com/vlsergey/react-cache-context#readme",
   "dependencies": {
-    "memoize-one": "^5.2.1",
     "tslib": "^2.2.0"
   },
   "devDependencies": {
