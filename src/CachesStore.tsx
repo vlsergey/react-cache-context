@@ -8,7 +8,8 @@ import Key from './Key';
 import RegisterCache from './RegisterCache';
 
 interface PropsType {
-  caches?: Record<string, CacheSpec<Key, unknown>>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  caches?: Record<string, CacheSpec<any, any>>;
   children: ReactNode;
 }
 
@@ -31,23 +32,27 @@ export default class CachesStore extends PureComponent<PropsType> {
 
   private readonly caches = {} as Record<string, CacheReactContextHolder<Key, unknown>>;
 
-  private readonly handleGet = <K extends Key, V>(cacheId: string): CacheReactContextHolder<K, V> =>
-    this.caches[cacheId] as CacheReactContextHolder<K, V>;
+  private readonly handleGet = <K extends Key, V>(cacheId: string): CacheReactContextHolder<K, V> => {
+    const result = this.caches[cacheId] as undefined | CacheReactContextHolder<K, V>;
+    if (!result) {
+      throw new Error(`Cache with id ${cacheId} is not defined yet`);
+    }
+    return result;
+  };
 
   private readonly handleGetOrRegister = <K extends Key, V>(
     cacheId: string,
-    missingValue: V
+    missingValue?: V
   ): CacheReactContextHolder<K, V> => {
-    if (this.caches[cacheId]) {
-      return this.caches[cacheId] as CacheReactContextHolder<K, V>;
-    }
+    const registered = this.caches[cacheId] as undefined | CacheReactContextHolder<K, V>;
+    if (registered) return registered;
 
     const newCacheContext = React.createContext(defaultCacheContext<K, V>(cacheId));
     const newCache: CacheReactContextHolder<K, V> = {
       context: newCacheContext,
       missingValue,
     };
-    this.caches[cacheId] = newCache;
+    this.caches[cacheId] = newCache as unknown as CacheReactContextHolder<Key, unknown>;
     return newCache;
   };
 
@@ -66,7 +71,7 @@ export default class CachesStore extends PureComponent<PropsType> {
         if (typeof cacheSpec === 'function') {
           innerResult = React.createElement(RegisterCache, {
             cacheId,
-            getter: cacheSpec as ((key: unknown) => Promise<unknown>)
+            getter: cacheSpec
           }, innerResult);
         } else {
           innerResult = React.createElement(RegisterCache, {cacheId, ...cacheSpec}, innerResult);

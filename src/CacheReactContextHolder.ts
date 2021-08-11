@@ -5,7 +5,7 @@ import Key from './Key';
 
 interface CacheReactContextHolder<K extends Key, V> {
   context: Context<CacheContext<K, V>>;
-  missingValue: V;
+  missingValue?: V;
 }
 
 export default CacheReactContextHolder;

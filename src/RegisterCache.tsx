@@ -15,8 +15,8 @@ function wrap<V> (value: V): V {
 }
 
 function unwrap<V> (value: V): V {
-  if (value === NULL_WRAP) return null;
-  if (value === UNDEFINED_WRAP) return undefined;
+  if (value === NULL_WRAP) return null as unknown as V;
+  if (value === UNDEFINED_WRAP) return undefined as unknown as V;
   return value;
 }
 
@@ -42,7 +42,7 @@ export default class RegisterCache<K extends Key, V>
   };
 
   static override contextType = AllCachesContext;
-  override context: React.ContextType<typeof AllCachesContext>;
+  override context: undefined | React.ContextType<typeof AllCachesContext> = undefined;
 
   override state = {
     updateCounter: 0,
@@ -55,8 +55,10 @@ export default class RegisterCache<K extends Key, V>
   constructor (props: PropsType<K, V>) {
     super(props);
 
-    this.values = props.mapSupplier<V>(props.cacheId);
-    this.errors = props.mapSupplier<unknown>(props.cacheId);
+    const mapSupplier: <T>(cacheId: string) => CacheMap<K, T> =
+      this.props.mapSupplier || RegisterCache.defaultMapSupplier;
+    this.values = mapSupplier<V>(props.cacheId);
+    this.errors = mapSupplier<unknown>(props.cacheId);
   }
 
   /** update state and thus force component rerender to provide new context to children */
@@ -64,19 +66,19 @@ export default class RegisterCache<K extends Key, V>
     this.setState(({updateCounter}) => ({updateCounter: updateCounter + 1}));
   };
 
-  private readonly handleClear = () => {
+  private readonly handleClear = (): void => {
     this.values.clear();
     this.errors.clear();
     this.queueRender();
   };
 
-  private readonly handleDelete = (key: K) => {
+  private readonly handleDelete = (key: K): void => {
     this.values.delete(key);
     this.errors.delete(key);
     this.queueRender();
   };
 
-  private readonly handleGet = (key: K) => {
+  private readonly handleGet = (key: K): V | undefined => {
     const value = this.values.get(key);
     if (value !== null && value !== undefined) {
       return unwrap(value);
@@ -94,13 +96,14 @@ export default class RegisterCache<K extends Key, V>
     return this.props.missingValue;
   };
 
-  private readonly handleGetPromise = (key: K) => {
+  private readonly handleGetPromise = (key: K): Promise<V> => {
     const value = this.values.get(key);
     if (value !== null && value !== undefined) {
-      return Promise.resolve(unwrap(value));
+      return Promise.resolve(unwrap<V>(value));
     }
-    if (this.loading.has(key)) {
-      return this.loading.get(key);
+    const currentlyLoadingPromise = this.loading.get(key);
+    if (currentlyLoadingPromise) {
+      return currentlyLoadingPromise;
     }
     return this.queueLoad(key);
   };
@@ -132,7 +135,10 @@ export default class RegisterCache<K extends Key, V>
 
   override render (): JSX.Element {
     const {cacheId, missingValue, children} = this.props;
-    const cacheContextHolder = this.context.getOrRegister(cacheId, missingValue);
+
+    const allCachesContext = this.context;
+    if (!allCachesContext) throw new Error('<RegisterCache> must be placed inside of <AllCachesContext> element');
+    const cacheContextHolder = allCachesContext.getOrRegister<K, V>(cacheId, missingValue);
 
     if (!cacheContextHolder) {
       return children as unknown as JSX.Element;

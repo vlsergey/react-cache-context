@@ -49,7 +49,7 @@ describe('react-cache-context', () => {
   });
 
   it('Able to render cache with delayed getter return', async () => {
-    let myResolve: (value: string) => unknown;
+    let myResolve: (value: string) => unknown = () => { throw new Error('not yet defined'); };
     const getter = async () => new Promise((resolve: (value: string) => unknown) => {
       myResolve = resolve;
     });
