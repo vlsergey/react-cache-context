@@ -73,12 +73,16 @@ export default class RegisterCache<K extends Key, V>
   };
 
   private readonly handleDelete = (key: K): void => {
+    if (key === null) return;
+
     this.values.delete(key);
     this.errors.delete(key);
     this.queueRender();
   };
 
-  private readonly handleGet = (key: K): V | undefined => {
+  private readonly handleGet = (key: K | null | undefined): V | undefined => {
+    if (key === null || key === undefined) return this.props.missingValue;
+
     const value = this.values.get(key);
     if (value !== null && value !== undefined) {
       return unwrap(value);
@@ -96,7 +100,9 @@ export default class RegisterCache<K extends Key, V>
     return this.props.missingValue;
   };
 
-  private readonly handleGetPromise = (key: K): Promise<V> => {
+  private readonly handleGetPromise = (key: K | null | undefined): Promise<undefined | V> => {
+    if (key === null || key === undefined) return Promise.resolve(this.props.missingValue);
+
     const value = this.values.get(key);
     if (value !== null && value !== undefined) {
       return Promise.resolve(unwrap<V>(value));
