@@ -1,6 +1,6 @@
 {
   "name": "@vlsergey/react-cache-context",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "React Context for caching values by key, optionally with batched values supplier",
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
